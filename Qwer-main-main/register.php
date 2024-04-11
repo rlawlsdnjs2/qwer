@@ -32,13 +32,17 @@ if (!preg_match("/^[0-9]{10}$/", $student_id)) {
     exit;
 }
 
-// SQL 쿼리 작성하여 데이터베이스에 사용자 정보 추가
-$sql = "INSERT INTO users (username, password, email, student_id, major) VALUES ('$username', '$password', '$email', '$student_id', '$major')";
+// 비밀번호 해싱
+$password_hashed = password_hash($password, PASSWORD_DEFAULT);
+
+// SQL 쿼리 작성하여 데이터베이스에 사용자 정보 추가 (비밀번호 해싱된 값 사용)
+$sql = "INSERT INTO users (username, password, email, student_id, major) VALUES ('$username', '$password_hashed', '$email', '$student_id', '$major')";
 
 // 쿼리 실행
 if ($conn->query($sql) === TRUE) {
-    // 회원가입이 성공적으로 완료되면 홈 화면으로 리디렉션
-    header("Location: home.html");
+    // 회원가입이 성공적으로 완료되면 홈 화면으로 리디렉션하고 메시지 표시
+    echo "<script>alert('회원가입이 완료되었습니다.');</script>";
+    echo "<script>window.location.href = 'index.html';</script>";
     exit;
 } else {
     echo "오류: " . $sql . "<br>" . $conn->error;

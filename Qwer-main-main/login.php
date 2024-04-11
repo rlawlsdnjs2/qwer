@@ -1,12 +1,12 @@
 <?php
 // MySQL 서버 연결 설정
 $servername = "localhost"; // MySQL 호스트 이름
-$username = "root"; // MySQL 사용자 이름
-$password = "dbgml652@"; // MySQL 사용자 비밀번호
+$username_db = "root"; // MySQL 사용자 이름
+$password_db = "dbgml652@"; // MySQL 사용자 비밀번호
 $dbname = "qwer"; // 사용할 데이터베이스 이름
 
 // MySQL 연결 생성
-$conn = new mysqli($servername, $username, $password, $dbname);
+$conn = new mysqli($servername, $username_db, $password_db, $dbname);
 
 // 연결 확인
 if ($conn->connect_error) {
@@ -14,23 +14,38 @@ if ($conn->connect_error) {
 }
 
 // 로그인 양식으로부터 정보 가져오기
-$username = $_POST['username'];
-$password = $_POST['password'];
+if(isset($_POST['username']) && isset($_POST['password'])) {
+    $username = $_POST['username'];
+    $password = $_POST['password'];
 
-// 입력한 비밀번호를 해싱하여 데이터베이스와 비교
-$password = md5($password); // 또는 다른 안전한 해싱 알고리즘 사용
+    // SQL 쿼리 작성하여 사용자 확인
+    $sql = "SELECT * FROM users WHERE username='$username'";
+    $result = $conn->query($sql);
 
-// SQL 쿼리 작성하여 사용자 확인
-$sql = "SELECT * FROM users WHERE username='$username' AND password='$password'";
-$result = $conn->query($sql);
+    if ($result->num_rows == 1) {
+        // 사용자가 존재하는 경우
+        $row = $result->fetch_assoc();
+        $hashed_password = $row['password'];
 
-if ($result->num_rows == 1) {
-    // 사용자가 존재하면 홈 화면으로 리디렉션
-    header("Location: home.html");
-    exit;
+        // 입력한 비밀번호와 저장된 해시된 비밀번호를 비교
+        if (password_verify($password, $hashed_password)) {
+            // 비밀번호가 일치하는 경우, 로그인 성공
+            header("Location: home.html");
+            exit;
+        } else {
+            // 비밀번호가 일치하지 않는 경우
+            echo "<script>alert('아이디 또는 비밀번호가 올바르지 않습니다.');</script>";
+            echo "<script>window.location.href = 'index.html';</script>";
+        }
+    } else {
+        // 사용자가 존재하지 않는 경우
+        echo "<script>alert('아이디 또는 비밀번호가 올바르지 않습니다.');</script>";
+        echo "<script>window.location.href = 'index.html';</script>";
+    }
 } else {
-    // 사용자가 존재하지 않으면 로그인 실패 메시지 출력
-    echo "아이디 또는 비밀번호가 올바르지 않습니다.";
+    // 아이디나 비밀번호가 전송되지 않은 경우
+    echo "<script>alert('아이디와 비밀번호를 입력해주세요.');</script>";
+    echo "<script>window.location.href = 'index.html';</script>";
 }
 
 // MySQL 연결 종료
